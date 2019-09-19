@@ -46,7 +46,14 @@ public class TreeViewerTest2 {
 		removeButton.addSelectionListener(SelectionListener.widgetSelectedAdapter((e) -> {
 			IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 			Node node = (Node) selection.getFirstElement();
+			if(node == null)
+				return;
+			
 			Node parentNode = node.getParent();
+			if(parentNode == null) {
+				viewer.setInput(null);
+				return;
+			}
 			parentNode.remove(node);
 
 			viewer.refresh(parentNode);
@@ -57,6 +64,8 @@ public class TreeViewerTest2 {
 		addButton.addSelectionListener(SelectionListener.widgetSelectedAdapter((e) -> {
 			IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 			Node parentNode = (Node) selection.getFirstElement();
+			if(parentNode == null)
+				return;
 			Node child = new Node();
 			child.setFile(new File(parentNode.getFile(), "Child"));
 			child.setParent(parentNode);
@@ -68,7 +77,10 @@ public class TreeViewerTest2 {
 		button.addSelectionListener(SelectionListener.widgetSelectedAdapter((e) -> {
 			Node list = scanFolder(text.getText());
 			System.out.println(list);
-			viewer.setInput(list);
+			Node root = new Node();
+			root.setFile(new File(text.getText()));
+			root.addChild(list);
+			viewer.setInput(root);
 		}));
 
 		shell.layout();
@@ -115,14 +127,7 @@ public class TreeViewerTest2 {
 
 		@Override
 		public Object[] getChildren(Object inputElement) {
-			if (inputElement instanceof Node) {
-				Node node = (Node) inputElement;
-				List<Node> children = node.getChildren();
-				if (children == null || children.isEmpty())
-					return null;
-				return children.toArray();
-			}
-			return null;
+			return getElements(inputElement);
 		}
 
 		@Override
