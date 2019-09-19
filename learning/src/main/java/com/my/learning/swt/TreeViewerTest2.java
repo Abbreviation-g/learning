@@ -46,11 +46,11 @@ public class TreeViewerTest2 {
 		removeButton.addSelectionListener(SelectionListener.widgetSelectedAdapter((e) -> {
 			IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 			Node node = (Node) selection.getFirstElement();
-			if(node == null)
+			if (node == null)
 				return;
-			
+
 			Node parentNode = node.getParent();
-			if(parentNode == null) {
+			if (parentNode == null) {
 				viewer.setInput(null);
 				return;
 			}
@@ -64,22 +64,33 @@ public class TreeViewerTest2 {
 		addButton.addSelectionListener(SelectionListener.widgetSelectedAdapter((e) -> {
 			IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 			Node parentNode = (Node) selection.getFirstElement();
-			if(parentNode == null)
+			if (parentNode == null) {
+				Node child = new Node();
+				child.setFile(new File("Child"));
+
+				Node root = new Node();
+				root.addChild(child);
+
+				viewer.setInput(root);
 				return;
+			}
 			Node child = new Node();
 			child.setFile(new File(parentNode.getFile(), "Child"));
 			child.setParent(parentNode);
-			
+
 			parentNode.addChild(child);
 			viewer.refresh(parentNode);
 		}));
 
 		button.addSelectionListener(SelectionListener.widgetSelectedAdapter((e) -> {
 			Node list = scanFolder(text.getText());
+			if (list == null)
+				return;
 			System.out.println(list);
+
 			Node root = new Node();
-			root.setFile(new File(text.getText()));
 			root.addChild(list);
+
 			viewer.setInput(root);
 		}));
 
@@ -119,7 +130,7 @@ public class TreeViewerTest2 {
 				Node node = (Node) inputElement;
 				List<Node> children = node.getChildren();
 				if (children == null || children.isEmpty())
-					return null;
+					return new Object[] { node };
 				return children.toArray();
 			}
 			return null;
@@ -187,11 +198,11 @@ public class TreeViewerTest2 {
 		public File getFile() {
 			return file;
 		}
-		
-		public boolean addChild(Node child){
+
+		public boolean addChild(Node child) {
 			return children.add(child);
 		}
-		
+
 		public boolean remove(Node child) {
 			return children.remove(child);
 		}
