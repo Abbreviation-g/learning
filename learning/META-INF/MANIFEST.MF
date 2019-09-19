@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: learning
+Bundle-SymbolicName: learning
+Bundle-Version: 1.0.0.qualifier
+Export-Package: com.my.learning,
+ com.my.learning.angle.hand,
+ com.my.learning.data.structure,
+ com.my.learning.htmlunit
+Require-Bundle: org.eclipse.swt;bundle-version="3.111.0",
+ org.eclipse.jface;bundle-version="3.16.0",
+ org.eclipse.core.runtime;bundle-version="3.15.300"
