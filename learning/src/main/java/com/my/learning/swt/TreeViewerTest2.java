@@ -112,10 +112,13 @@ public class TreeViewerTest2 {
 		Node node = new Node();
 		node.setFile(folder);
 		if (folder.isDirectory()) {
-			for (File file : folder.listFiles()) {
-				Node child = scanFolder(file.getAbsolutePath());
-				child.setParent(node);
-				node.addChild(child);
+			File[] files = 	folder.listFiles();
+			if(files!= null && files.length>=1) {
+				for (File file : folder.listFiles()) {
+					Node child = scanFolder(file.getAbsolutePath());
+					child.setParent(node);
+					node.addChild(child);
+				}
 			}
 		}
 

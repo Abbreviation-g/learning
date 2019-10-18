@@ -37,10 +37,14 @@ public class TreeViewerTest {
 
 		viewer.setContentProvider(new MyContentProvider());
 		viewer.setLabelProvider(new MyLabelProvider());
+		viewer.getTree().addMouseWheelListener((e)->{
+			System.out.println(e);
+		});
 
 		button.addSelectionListener(SelectionListener.widgetSelectedAdapter((e) -> {
 			viewer.setInput(new File(text.getText()));
 		}));
+		button.setFocus();
 		
 		shell.layout();
 		shell.open();
