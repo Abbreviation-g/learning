@@ -7,6 +7,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.internal.win32.OS;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -18,7 +19,7 @@ import org.eclipse.swt.widgets.Tree;
 public class TreeViewerTest {
 	public static void main(String[] args) {
 		Display display = new Display();
-		Shell shell = new Shell(display);
+		Shell shell = new Shell(display,SWT.ON_TOP|SWT.SHELL_TRIM);
 		shell.setSize(500, 800);
 		shell.setLayout(new GridLayout(2, false));
 
@@ -31,8 +32,9 @@ public class TreeViewerTest {
 		buttonGridData.widthHint = 100;
 		button.setLayoutData(buttonGridData);
 
-		TreeViewer viewer = new TreeViewer(shell);
+		TreeViewer viewer = new TreeViewer(shell, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		Tree tree = viewer.getTree();
+		tree.setBackground(shell.getBackground());
 		tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 5));
 
 		viewer.setContentProvider(new MyContentProvider());
@@ -42,7 +44,10 @@ public class TreeViewerTest {
 		});
 
 		button.addSelectionListener(SelectionListener.widgetSelectedAdapter((e) -> {
-			viewer.setInput(new File(text.getText()));
+//			viewer.setInput(new File(text.getText()));
+			int flags = OS.SWP_NOSIZE | OS.SWP_NOMOVE | OS.SWP_NOACTIVATE;
+//			OS.SetWindowPos (shell.handle, OS.HWND_TOP, 0, 0, 0, 0, flags);
+			OS.SetWindowPos( shell.handle, OS.HWND_NOTOPMOST, 0, 0, 0, 0, OS.SWP_NOMOVE|OS.SWP_NOSIZE );
 		}));
 		button.setFocus();
 		

@@ -22,7 +22,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
-public class DragAndDropExample {
+public class ByteArrayDragAndDropExample {
 	static class MyType {
 		String fileName;
 		long fileLength;

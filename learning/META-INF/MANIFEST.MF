@@ -24,4 +24,7 @@ Require-Bundle: org.eclipse.swt;bundle-version="3.111.0",
  org.eclipse.debug.core;bundle-version="3.13.300",
  org.eclipse.debug.ui;bundle-version="3.14.100",
  org.eclipse.nebula.widgets.opal.propertytable;bundle-version="1.0.0",
- org.eclipse.nebula.widgets.opal.propertytable.snippets;bundle-version="1.0.0"
+ org.eclipse.nebula.widgets.opal.propertytable.snippets;bundle-version="1.0.0",
+ org.eclipse.ui.forms;bundle-version="3.8.0",
+ org.eclipse.gef,
+ org.eclipse.nebula.widgets.cdatetime;bundle-version="1.4.0"
