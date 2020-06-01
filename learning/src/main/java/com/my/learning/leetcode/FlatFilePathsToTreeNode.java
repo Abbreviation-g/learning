@@ -7,7 +7,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class 将文件列表转换为文件树 {
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SimplePropertyPreFilter;
+
+/**
+ * 将文件列表转换为文件树
+ * 
+ * @author guoenjing
+ *
+ */
+public class FlatFilePathsToTreeNode {
 	public static class Node extends File {
 		private static final long serialVersionUID = 1L;
 		private List<Node> children;
@@ -33,6 +43,10 @@ public class 将文件列表转换为文件树 {
 			return segments;
 		}
 
+		public List<Node> getChildren() {
+			return children;
+		}
+		
 		@Override
 		public File[] listFiles() {
 			return children.toArray(new Node[children.size()]);
@@ -82,8 +96,12 @@ public class 将文件列表转换为文件树 {
 		filePaths.add("C:/f1/f11/f1122.c");
 		filePaths.add("C:/f1/f12/f121.c");
 		filePaths.add("C:/f1/f12/f122.c");
+		filePaths.add("C:/");
 		
 		Node rootNode = Node.filePathToTreeNode(filePaths);
-		System.out.println(rootNode);
+		
+		SimplePropertyPreFilter filter = new SimplePropertyPreFilter("segments","children");
+		String jsonString = JSONObject.toJSONString(rootNode, filter);
+		System.out.println(jsonString);
 	}
 }
