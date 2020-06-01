@@ -13,12 +13,12 @@ public class 求多个文件路径的最大共同父路径 {
 		filePaths.add("C:/f1/f11/f1122.c");
 //		filePaths.add("C:/f1/f12/f121.c");
 //		filePaths.add("C:/f1/f12/f122.c");
+		List<String[]> allSegments = pathsToSegments(filePaths);
 		
-		System.out.println(getCommonSegments(filePaths));
+		System.out.println(getCommonSegments(allSegments));
 	}
 	
-	public static List<String> getCommonSegments(List<String> filePaths){
-		List<String[]> allSegments = pathsToSegments(filePaths);
+	public static List<String> getCommonSegments(List<String[]> allSegments){
 		List<String> commonSegments = new ArrayList<String>(); 
 		
 		String currentSegment = null;
