@@ -89,6 +89,14 @@
 			<artifactId>aviator</artifactId>
 			<version>5.1.4</version>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.freemarker/freemarker 模板工具 -->
+		<dependency>
+		    <groupId>org.freemarker</groupId>
+		    <artifactId>freemarker</artifactId>
+		    <version>2.3.30</version>
+		</dependency>
+		
 
 	</dependencies>
 
