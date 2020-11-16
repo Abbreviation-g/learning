@@ -3,6 +3,11 @@ package com.my.learning.annotation;
 import java.lang.annotation.Annotation;
 
 public class Test {
+	public static class t{
+		
+	}
+	
+	
 	public static void main(String[] args) {
 		Class<? extends Source> clazz = Source2.class;
 //		for (Method method : clazz.getDeclaredMethods()) {

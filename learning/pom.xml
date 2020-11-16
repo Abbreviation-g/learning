@@ -40,22 +40,56 @@
 			<artifactId>jna</artifactId>
 			<version>4.1.0</version>
 		</dependency>
-		
+
 		<!-- jfreechart -->
 		<!-- https://mvnrepository.com/artifact/org.jfree/jfreechart -->
 		<dependency>
-		    <groupId>org.jfree</groupId>
-		    <artifactId>jfreechart</artifactId>
-		    <version>1.0.19</version>
+			<groupId>org.jfree</groupId>
+			<artifactId>jfreechart</artifactId>
+			<version>1.0.19</version>
 		</dependency>
-				
+
 		<!-- https://mvnrepository.com/artifact/jfree/jfreechart-swt -->
 		<dependency>
-		    <groupId>jfree</groupId>
-		    <artifactId>jfreechart-swt</artifactId>
-		    <version>1.0.9</version>
+			<groupId>jfree</groupId>
+			<artifactId>jfreechart-swt</artifactId>
+			<version>1.0.9</version>
 		</dependency>
-		
+
+		<!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>fastjson</artifactId>
+			<version>1.2.58</version>
+		</dependency>
+
+		<!-- 一种基于Java的Unix 命令行 工具 -->
+		<dependency>
+			<groupId>org.unix4j</groupId>
+			<artifactId>unix4j-command</artifactId>
+			<version>0.5</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.microsoft.z3/javaAPI -->
+		<dependency>
+			<groupId>com.microsoft.z3</groupId>
+			<artifactId>javaAPI</artifactId>
+			<version>4.8.8</version>
+		</dependency>
+
+		<!-- 数学表达式计算 -->
+		<dependency>
+			<groupId>com.scireum</groupId>
+			<artifactId>parsii</artifactId>
+			<version>1.5</version>
+		</dependency>
+		<!--  A lightweight, high performance expression evaluator for java  -->
+		<dependency>
+			<groupId>com.googlecode.aviator</groupId>
+			<artifactId>aviator</artifactId>
+			<version>5.1.4</version>
+		</dependency>
+
 	</dependencies>
 
 	<repositories>

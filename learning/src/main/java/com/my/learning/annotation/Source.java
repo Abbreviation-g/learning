@@ -1,6 +1,8 @@
 package com.my.learning.annotation;
 
-@TestMethodAnnotation
+import java.lang.annotation.Retention;
+
+@TestMethodAnnotation()
 public class Source {
 	
 	@TestMethodAnnotation
@@ -12,5 +14,7 @@ public class Source {
 		
 	}
 	
-	
+	public static void main(String[] args) {
+		
+	}
 }

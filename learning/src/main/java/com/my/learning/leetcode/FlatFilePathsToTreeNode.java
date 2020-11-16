@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SimplePropertyPreFilter;
 
@@ -26,11 +25,15 @@ public class FlatFilePathsToTreeNode {
 		public Node(String[] segments) {
 			super(segmentsToPath(segments));
 			this.segments = segments;
-			this.children = new ArrayList<Node>();
 		}
 
 		public void addChild(Node child) {
 			if (child == null) {
+				return;
+			}
+			if(children == null) {
+				children = new ArrayList<Node>();
+				children.add(child);
 				return;
 			}
 			int index = children.indexOf(child);
@@ -103,5 +106,30 @@ public class FlatFilePathsToTreeNode {
 		SimplePropertyPreFilter filter = new SimplePropertyPreFilter("segments","children");
 		String jsonString = JSONObject.toJSONString(rootNode, filter);
 		System.out.println(jsonString);
+//		{
+//			"children": [{
+//				"children": [{
+//					"children": [{
+//						"children": [],
+//						"segments": ["C:\\", "f1", "f11", "f111.c"]
+//					}, {
+//						"children": [],
+//						"segments": ["C:\\", "f1", "f11", "f1122.c"]
+//					}],
+//					"segments": ["C:\\", "f1", "f11"]
+//				}, {
+//					"children": [{
+//						"children": [],
+//						"segments": ["C:\\", "f1", "f12", "f121.c"]
+//					}, {
+//						"children": [],
+//						"segments": ["C:\\", "f1", "f12", "f122.c"]
+//					}],
+//					"segments": ["C:\\", "f1", "f12"]
+//				}],
+//				"segments": ["C:\\", "f1"]
+//			}],
+//			"segments": ["C:\\"]
+//		}
 	}
 }

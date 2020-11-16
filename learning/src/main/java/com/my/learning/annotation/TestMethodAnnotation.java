@@ -10,5 +10,11 @@ import java.lang.annotation.Target;
 @Target(value= {ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TestMethodAnnotation {
-
+	public String string() default "";
+	
+	public String[] strings() default {};
+	
+	public ElementType enumType() default ElementType.METHOD;
+	
+	public Retention annotation() default @Retention(RetentionPolicy.RUNTIME);
 }
