@@ -1,0 +1,13 @@
+dubbo:
+  application:
+    name: dubbo-nacos-demo-consumer
+    qos-enable: false
+  protocol:
+    name: dubbo
+    port: -1
+  registry:
+    address: nacos://172.16.31.80:8848
+    group: dubbo-nacos-demo
+    username: nacos
+    password: nacos
+    parameters.register-consumer-url: true

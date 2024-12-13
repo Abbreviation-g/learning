@@ -1,0 +1,18 @@
+dubbo:
+  application:
+    name: dubbo-nacos-demo-provider
+    qos-enable: false
+    enable-file-cache: false
+  protocol:
+    name: dubbo
+    port: -1
+  registry:
+    address: nacos://172.16.31.80:8848
+    group: dubbo-nacos-demo
+    username: nacos
+    password: nacos
+  provider:
+    loadbalance: roundrobin
+server:
+  port: 8082
+
