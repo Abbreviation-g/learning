@@ -88,9 +88,35 @@
 			<unit id="org.eclipse.nebula.widgets.treemapper.feature.feature.group" version="1.0.0.202402011804"/>
 			<unit id="org.eclipse.nebula.widgets.xviewer.feature.feature.group" version="1.1.0.202402011804"/>
 		</location>
+		<!-- cdt 11.6.1 -->
 		<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 			<repository location="https://download.eclipse.org/tools/cdt/releases/11.6/cdt-11.6.1/"/>
 			<unit id="org.eclipse.cdt.feature.group" version="11.6.1.202407022008"/>
+		</location>
+		<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+			<repository location="https://download.eclipse.org/tools/cdt/releases/cdt-lsp-2.0/cdt-lsp-2.0.0/"/>
+			<unit id="org.eclipse.cdt.lsp.feature.feature.group" version="2.0.0.202406041551"/>
+			<unit id="org.eclipse.cdt.lsp.feature.source.feature.group" version="2.0.0.202406041551"/>
+		</location>
+		<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+			<repository location="https://download.eclipse.org/lsp4e/releases/0.26.6/"/>
+			<unit id="com.google.gson" version="2.11.0"/>
+			<unit id="org.eclipse.lsp4e" version="0.18.14.202410030435"/>
+			<unit id="org.eclipse.lsp4e.debug" version="0.15.11.202409041348"/>
+			<unit id="org.eclipse.lsp4e.debug.source" version="0.15.11.202409041348"/>
+			<unit id="org.eclipse.lsp4e.jdt" version="0.13.2.202409271157"/>
+			<unit id="org.eclipse.lsp4e.jdt.source" version="0.13.2.202409271157"/>
+			<unit id="org.eclipse.lsp4e.source" version="0.18.14.202410030435"/>
+			<unit id="org.eclipse.lsp4e.tests.mock.source" version="0.16.12.202410030757"/>
+			<unit id="org.eclipse.lsp4j" version="0.23.1.v20240521-1815"/>
+			<unit id="org.eclipse.lsp4j.debug" version="0.23.1.v20240521-1815"/>
+			<unit id="org.eclipse.lsp4j.jsonrpc" version="0.23.1.v20240521-1815"/>
+			<unit id="org.eclipse.lsp4j.jsonrpc.debug" version="0.23.1.v20240521-1815"/>
+		</location>
+		<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+			<repository location="https://download.eclipse.org/tm4e/releases/0.14.0/"/>
+			<unit id="org.eclipse.tm4e.feature.feature.group" version="0.14.0.202410282056"/>
+			<unit id="org.eclipse.tm4e.language_pack.feature.feature.group" version="0.14.0.202410282056"/>
 		</location>
 	</locations>
 </target>
