@@ -6,6 +6,8 @@
 			<repository location="https://download.eclipse.org/eclipse/updates/4.34/"/>
 			<unit id="org.eclipse.platform.ide" version="4.34.0.I20241120-1800"/>
 			<unit id="org.eclipse.sdk.ide" version="4.34.0.I20241120-1800"/>
+			<unit id="org.eclipse.pde.feature.group" version="3.16.100.v20241120-1800"/>
+			<unit id="org.eclipse.pde.source.feature.group" version="3.16.100.v20241120-1800"/>
 		</location>
 		<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 			<repository location="https://download.eclipse.org/tools/gef/classic/release/3.22.0"/>
@@ -85,6 +87,10 @@
 			<unit id="org.eclipse.nebula.widgets.tiles.feature.feature.group" version="1.0.0.202402011804"/>
 			<unit id="org.eclipse.nebula.widgets.treemapper.feature.feature.group" version="1.0.0.202402011804"/>
 			<unit id="org.eclipse.nebula.widgets.xviewer.feature.feature.group" version="1.1.0.202402011804"/>
+		</location>
+		<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+			<repository location="https://download.eclipse.org/tools/cdt/releases/11.6/cdt-11.6.1/"/>
+			<unit id="org.eclipse.cdt.feature.group" version="11.6.1.202407022008"/>
 		</location>
 	</locations>
 </target>
