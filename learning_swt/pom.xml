@@ -43,6 +43,13 @@
             </exclusions>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.eclipse.platform/org.eclipse.ui.forms -->
+        <dependency>
+            <groupId>org.eclipse.platform</groupId>
+            <artifactId>org.eclipse.ui.forms</artifactId>
+            <version>3.11.600</version>
+        </dependency>
+
         <!-- jfreechart -->
         <!-- https://mvnrepository.com/artifact/org.jfree/jfreechart -->
         <dependency>
