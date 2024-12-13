@@ -1,0 +1,11 @@
+server:
+  port: 9999
+spring:
+  application:
+    name: demo
+
+milvus:
+  host: 139.227.105.53
+  port: 19530
+  username:
+  password:
