@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Learning-plugin
+Bundle-SymbolicName: learning-plugin
+Bundle-Version: 1.0.0.qualifier
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.draw2d,
+ org.eclipse.nebula.widgets.opal.propertytable
+Automatic-Module-Name: learning.plugin
+Bundle-RequiredExecutionEnvironment: JavaSE-21
