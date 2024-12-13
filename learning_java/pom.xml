@@ -67,5 +67,12 @@
             <version>2.2.4</version>
         </dependency>
 
+        <!-- 一种基于Java的Unix 命令行 工具 -->
+        <dependency>
+            <groupId>org.unix4j</groupId>
+            <artifactId>unix4j-command</artifactId>
+            <version>0.5</version>
+        </dependency>
+
     </dependencies>
 </project>
