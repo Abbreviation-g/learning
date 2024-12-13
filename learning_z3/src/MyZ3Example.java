@@ -20,6 +20,7 @@ import com.microsoft.z3.Status;
 import com.microsoft.z3.Symbol;
 
 public class MyZ3Example {
+	// -Djava.library.path=dll
 	public static void main(String[] args) {
 
 		System.loadLibrary("libz3");
