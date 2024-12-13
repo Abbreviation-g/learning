@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: dubbo-nacos-demo-grpc-provider
+
+dubbo:
+  application:
+    qos-enable: false
+    enable-file-cache: false
+  protocol:
+    name: tri
+    port: -1
+    id: tri
+  registry:
+    address: nacos://172.16.31.80:8848?namespace=demo
+    #    group: demo-group
+    username: nacos
+    password: nacos
+  provider:
+    loadbalance: roundrobin
+
