@@ -12,15 +12,16 @@ public class LocalCommandExecutor2 {
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         String command = "echo Hello, World!";
-        command = "xxxx";
+//        command = "xxxx";
+        command = "explorer C:\\Users\\enjing.guo\\Downloads";
         LocalCommandExecutor2 localCommandExecutor = new LocalCommandExecutor2(false, command);
         CommandResult commandResult = localCommandExecutor.execute();
         System.out.println("执行结果：");
-        System.out.println(printBytes(commandResult.getOutput()));
+        System.out.println(printBytes(commandResult.output()));
         System.out.println("异常信息：");
-        System.out.println(printBytes(commandResult.getError()));
+        System.out.println(printBytes(commandResult.error()));
         System.out.println("退出值：");
-        System.out.println(commandResult.getExitCode());
+        System.out.println(commandResult.exitCode());
     }
 
     private static String printBytes(byte[] bytes) {
@@ -82,27 +83,6 @@ public class LocalCommandExecutor2 {
         }
     }
 
-    public static class CommandResult {
-        private final byte[] output;
-        private final byte[] error;
-        private final int exitCode;
-
-        public CommandResult(byte[] output, byte[] error, int exitCode) {
-            this.output = output;
-            this.error = error;
-            this.exitCode = exitCode;
-        }
-
-        public byte[] getOutput() {
-            return output;
-        }
-
-        public byte[] getError() {
-            return error;
-        }
-
-        public int getExitCode() {
-            return exitCode;
-        }
+    public record CommandResult(byte[] output, byte[] error, int exitCode) {
     }
 }
