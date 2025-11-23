@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html style = "height: 100%">
+	<head>
+		<meta charset = 'utf-8'/>
+		<script type="text/javascript" src="echarts.min.js"></script>
+		<script type="text/javascript">
+			function radioClick(){
+				var seriesType = getSeriesType();	
+				for(var i=0;i<option.series.length;i++){
+					var s = option.series[i];
+					s.type = seriesType;
+				}
+				myChart.setOption(option,true);
+			}
+			
+			function getSeriesType(){
+				var zhexianInput=document.getElementById("zhexian");
+				var sandianInput=document.getElementById("sandian");
+				var seriesType = "line";
+				if(zhexianInput.checked) {
+					seriesType = "line";
+				} else if(sandianInput.checked) {
+					seriesType = "scatter";
+				}
+				return seriesType;
+			}
+			
+			function splitName(variableName){
+				if(variableName.indexOf("-input")!=-1) {
+					var lastIndex = variableName.lastIndexOf("-input");
+					variableName = variableName.substring(0,lastIndex);
+					return [variableName,"input"];
+				} else if(variableName.indexOf("-output")!=-1) {
+					var lastIndex = variableName.lastIndexOf("-output");
+					variableName = variableName.substring(0,lastIndex);
+					return [variableName,"output"];
+				}
+				return null;
+			}
+			function gridTooltip(v1){
+				var arr = splitName(v1.seriesName);
+				var variableName = arr[0];
+				var inputOutput = arr[1];
+				var line2 = v1.value;
+				if(inputOutput == "input") {
+					var line1 = variableName +"-" + "输入";
+					return line1+"<br/>"+line2;
+				} else if(inputOutput == "output") {
+					var line1 = variableName +"-" + "输出";
+					return line1+"<br/>"+line2;
+				}
+			}
+			function legendTooltip(legend){
+				var legendName = legend.name;
+				var arr = splitName(legendName);
+				var variableName = arr[0];
+				var inputOutput = arr[1];
+				if(inputOutput == "input") {
+					return variableName +"-" + "输入";
+				} else if(inputOutput == "output") {
+					return variableName +"-" + "输出";
+				}
+				return legendName;
+			}
+			function getGrid0DataNames(){
+				return getGridDataNames(grid0Datas);
+			}
+			function getGrid1DataNames(){
+				return getGridDataNames(grid1Datas);
+			}
+			function getGridDataNames(gridData){
+				var nameArr= [];
+				for(var i=0;i<gridData.length;i++) {
+					nameArr.push(gridData[i].name);
+				}
+				return nameArr;
+			}
+			function getGrid0SeriesNames(){
+				return gridSeriesNames(grid0Datas);
+			}
+			function getGrid1SeriesNames(){
+				return gridSeriesNames(grid1Datas);
+			}
+			function gridSeriesNames(gridData){
+				var nameArr= [];
+				for(var i=0;i<gridData.length;i++) {
+					nameArr.push(gridData[i].seriesName);
+				}
+				return nameArr;
+			}
+			function pushData(newData, dataArr){
+				for(var i=0;i<grid0Datas.length;i++) {
+					if(grid0Datas[i].name == newData.name) {
+						return false;
+					}
+				}
+				for(var i=0;i<grid1Datas.length;i++) {
+					if(grid1Datas[i].name == newData.name) {
+						return false;
+					}
+				}
+				dataArr.push(newData);
+				return true;
+			}
+		</script>
+	</head>
+	
+	<body style="height: 100%;margin: 0">
+		<!---->
+		<div id = "container" style="height: 90%"></div>
+		<div align="center">
+			<input value="0" type="radio" name="zhanshi" checked="checked"  id="zhexian" onclick="radioClick()"><label for="zhexian">折线展示</label>
+			<input value="1" type="radio" name="zhanshi" id="sandian" onclick="radioClick()"><label for="sandian">散点展示</label>
+		</div>
+		
+		<script type="text/javascript">
+			var container = document.getElementById("container");
+			var myChart = echarts.init(container);
+			
+			var option = {
+				title:[],
+				grid:[{
+						right:"10%"
+					}],
+				tooltip:{
+					show:true,
+					formatter:gridTooltip
+				},
+				toolbox:{
+					show:true,
+					orient:"vertical",
+					top:"42%",
+					left:"1%",
+					itemGap:20,
+					feature:{
+						dataZoom:{
+							xAxisIndex:[0,1],
+							yAxisIndex:false,
+							title:{
+								zoom:"截取曲线",
+								back:"还原"
+							}
+						}
+					},
+				},
+				dataZoom:[],
+				legend:{
+					show:true,
+					orient:"vertical",
+					data:[],
+					tooltip:{
+						show:true,
+						formatter:legendTooltip
+					}
+				},
+				xAxis:[],
+				yAxis:[],
+				series:[]
+			};
+			
+			
+			myChart.setOption(option,true);
+			window.onresize = myChart.resize;
+			window.ondrop = function(event){
+				// alert("on drop");
+				// data = "{\"name\": \"新变量400\", 	\"data\": [ 		[\"用例3\", 300], 		[\"用例4\", 200], 		[\"用例5\", 100] 	], 	\"isInput\": false, 	\"gridIndex\": 0 }";
+				var data = event.dataTransfer.getData("text");
+				console.log(data);
+				alert(data);
+				var newGridData = JSON.parse(data);
+				addSeries0(newGridData);
+			};
+
+			document.addEventListener("dragover", function(event) {
+				event.preventDefault();
+			});
+			document.addEventListener("drop", function(event) {
+				event.preventDefault();
+			});
+			var grid0Datas = [];
+			var grid1Datas = [];
+		</script>
+		<script>
+			/*
+			var newGridData = {
+						name:newName,
+						data:[[],[],[]],
+						isInput:isInput,
+						gridIndex:gridIndex
+					};
+			*/
+			function addSeries0(newGridData){
+				var xAxis = option.xAxis;
+				var yAxis = option.yAxis;
+				var gridArr = option.grid;
+				var series0 = option.series;
+				var legend = option.legend;
+				var legendData = legend.data;
+				var title = option.title;
+				var dataZoom = option.dataZoom;
+
+				if(xAxis.length == 0) { //first
+					newGridData.gridIndex = 0;
+				}
+				newGridData.seriesName = newGridData.isInput? newGridData.name+"-input":newGridData.name+"-output";
+				
+				if(newGridData.gridIndex == 0) {
+					var result = pushData(newGridData,grid0Datas);
+					if(!result) {
+						return;
+					}
+				} else if(newGridData.gridIndex == 1) {
+					var result = pushData(newGridData,grid1Datas);
+					if(!result) {
+						return;
+					}
+				}
+
+				if(newGridData.gridIndex == 1) {
+					gridArr = [{
+						top:'10%',
+						right:'60%'
+					}, {
+						top:'10%',
+						left: '60%',
+					}]
+					option.grid = gridArr;
+				}
+				if(dataZoom.length == 0) {
+					dataZoom[0] = {
+						type:"slider",
+						xAxisIndex:0,
+					};
+				} else if(dataZoom.length == 1){
+					if(newGridData.gridIndex == 1) {
+						dataZoom[1] = {
+							type:"slider",
+							xAxisIndex:1,
+						};
+					}
+				}
+
+				var seriesType = getSeriesType();
+				var seriesSymbol = newGridData.isInput?"rect":"circle";
+				var smooth = newGridData.isInput?true:false;
+				
+				var newSeries={
+					name:newGridData.seriesName,
+					data:newGridData.data,
+					xAxisIndex: newGridData.gridIndex,
+					yAxisIndex: newGridData.gridIndex,
+					label:{
+						normal:{
+							show:true,
+							position:'top',
+						}
+					},
+					type: seriesType,
+					symbol:seriesSymbol,
+					smooth:smooth,
+				};
+				
+				// newSeries = {"name":"新增数据","data":[["用例1","1"],["用例2","5"],["用例3","25"]]}
+				series0.push(newSeries);
+
+				if(xAxis.length == 0 ) {
+					legend.x="right";
+					legend.y="center";
+				} else if(xAxis.length == 1) {
+					legend.x="center";
+					legend.y="center";
+				}
+
+				if(xAxis.length == 0) { //first create chart
+					xAxis[newGridData.gridIndex] = {
+						gridIndex: newGridData.gridIndex,
+						type:"category",
+						data:[],
+						boundaryGap: false,
+					};
+				} else if(xAxis.length == 1){
+					if(newGridData.gridIndex == 1) {
+						xAxis[newGridData.gridIndex] = {
+							gridIndex: newGridData.gridIndex,
+							type:"category",
+							data:[],
+							boundaryGap: false,
+						};
+					}
+				}
+
+				if(yAxis.length == 0) { //first create chart
+					yAxis[newGridData.gridIndex] = {
+						gridIndex: newGridData.gridIndex,
+						type:"value",
+					};
+				} else if(yAxis.length == 1){
+					if(newGridData.gridIndex == 1) {
+						yAxis[newGridData.gridIndex] = {
+							gridIndex: newGridData.gridIndex,
+							type:"value",
+						};
+					}
+				}
+
+				var xAxisData = xAxis[newGridData.gridIndex].data;
+				for(var i=0;i<newGridData.data.length;i++) {
+					var caseName = newGridData.data[i][0];
+					if(xAxisData.indexOf(caseName) == -1) {
+						xAxisData.push(caseName);
+					}
+				}
+				xAxisData.sort();
+
+				legendData = legendData.concat(getGrid0SeriesNames());
+				legendData = legendData.concat(getGrid1SeriesNames());
+				option.legend.data = legendData;
+
+				var titleArr = option.title;
+				if(xAxis.length == 2) {
+					titleArr[0] = {
+						left: '10%',
+						text: getGrid0DataNames().toString()
+					};
+					titleArr[1] = {
+						right: '15%',
+						text: getGrid1DataNames().toString()
+					};
+				} else {
+					titleArr[0] = {
+						left: 'center',
+						text: getGrid0DataNames().toString()
+					};
+				}
+
+				myChart.setOption(option,true);
+
+			}			
+			
+			function addChartTest0(){
+				var newGridData = {
+					name:'新变量300',
+					data:[['用例3',300],['用例4',200],['用例5',100]],
+					isInput:false,
+					gridIndex:0
+				};
+
+				addSeries0(newGridData);
+			}
+
+			// addChartTest0()
+		</script>
+		
+	</body>
+</html>
