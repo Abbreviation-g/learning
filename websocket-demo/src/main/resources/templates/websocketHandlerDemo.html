@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>666666</title>
+</head>
+<body>
+传递来的数据值cid:
+<input type="text" th:value="${cid}" id="cid"/>
+<p>【toUserId】：
+<div><input id="toUserId" name="toUserId" type="text" value="user-1"></div>
+<p>【toUserId】：
+<div><input id="contentText" name="contentText" type="text" value="hello websocket"></div>
+<p>【操作】：
+<div>
+    <button type="button" onclick="sendMessage()">发送消息</button>
+    <button type="button" onclick="closeWebSocket()">关闭Socket</button>
+</div>
+<div>
+    <label for="message">收到消息</label><textarea id="message" rows="10" cols="50"></textarea>
+</div>
+</body>
+
+<script type="text/javascript">
+    var cid = document.getElementById("cid").value;
+    const socket = new WebSocket("ws://localhost:8081/handler" + "/" + cid);
+
+
+    console.log("cid-->" + cid);
+    //打开事件
+    socket.onopen = function () {
+        console.log("Socket 已打开");
+        //socket.send("这是来自客户端的消息" + location.href + new Date());
+    };
+    //获得消息事件
+    socket.onmessage = function (msg) {
+        console.log("onmessage--" + msg.data);
+        document.getElementById("message").value += msg.data + "\n";
+        //发现消息进入    开始处理前端触发逻辑
+    };
+    //关闭事件
+    socket.onclose = function () {
+        console.log("Socket已关闭");
+    };
+    //发生了错误事件
+    socket.onerror = function () {
+        alert("Socket发生了错误");
+        //此时可以尝试刷新页面
+    }
+
+    function sendMessage() {
+        var toUserId = document.getElementById('toUserId').value;
+        var contentText = document.getElementById('contentText').value;
+        var msg = '{"sid":"' + toUserId + '","message":"' + contentText + '"}';
+        console.log(msg);
+        socket.send(msg);
+    }
+
+    function closeWebSocket() {
+        socket.close();
+    }
+</script>
+</html>
+

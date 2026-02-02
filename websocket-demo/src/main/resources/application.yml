@@ -1,0 +1,14 @@
+server:
+  port: 8081
+
+spring:
+  application:
+      name: websocket-demo
+  thymeleaf:
+    mode: HTML
+    cache: true
+    prefix: classpath:/templates/
+    encoding: UTF-8
+    suffix: .html
+    check-template-location: true
+    template-resolver-order: 1
