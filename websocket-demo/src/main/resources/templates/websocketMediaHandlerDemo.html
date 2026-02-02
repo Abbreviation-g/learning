@@ -19,7 +19,6 @@
 
     const socket = new WebSocket('ws://localhost:8081/media' + "/" + cid);
     var mediaRecorder;
-
     function startRecording() {
         // 获取麦克风权限
         navigator.mediaDevices.getUserMedia({audio: true})
@@ -30,10 +29,13 @@
                 });
 
                 mediaRecorder.ondataavailable = (e) => {
-                    if (e.data.size > 1024 && socket.readyState === WebSocket.OPEN) {
+                    if (e.data.size > 0 && socket.readyState === WebSocket.OPEN) {
                         socket.send(e.data);
                     }
                 };
+                mediaRecorder.onstop = () => {
+                    stream.getTracks().forEach(track => track.stop());
+                }
 
 // 开始录制，时间片设为20ms
                 mediaRecorder.start(200);
