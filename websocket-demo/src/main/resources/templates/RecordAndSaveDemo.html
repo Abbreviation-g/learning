@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>666666</title>
+</head>
+<body>
+<button id="start" onclick="startRecording()">开始录音</button>
+<br>
+<button id="stop" onclick="stopRecording()">停止录音</button>
+</body>
+<script type="text/javascript">
+    let mediaRecorder;
+    let recordedChunks = [];
+
+    async function startRecording() {
+        try {
+            // 获取音频流 (例如来自麦克风)
+            const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            // 创建 MediaRecorder，明确指定 mimeType 为 audio/webm
+            mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' });
+
+            mediaRecorder.ondataavailable = function(event) {
+                if (event.data && event.data.size > 0) {
+                    // 将录制的数据块添加到数组中
+                    recordedChunks.push(event.data);
+                    console.log(`收到数据块，大小:  $ {event.data.size} 字节`);
+                }
+            };
+
+            mediaRecorder.onstop = function() {
+                console.log("录制已停止，准备保存文件...");
+
+                // 1. 将所有数据块合并成一个完整的 Blob
+                const completeBlob = new Blob(recordedChunks, { type: 'audio/webm' }); // 指定最终文件类型
+
+                // 清空数组，为下次录制做准备
+                recordedChunks = [];
+
+                // 2. 为 Blob 创建一个临时 URL
+                const audioUrl = URL.createObjectURL(completeBlob);
+
+                // 3. 创建一个隐藏的 <a> 元素
+                const downloadLink = document.createElement('a');
+                downloadLink.href = audioUrl;
+
+                // 4. 设置 download 属性，指定下载的文件名
+                downloadLink.download = 'recording.webm'; // 用户下载时的默认文件名
+
+                // 5. 将链接添加到 DOM (为了在某些浏览器中正常工作，需要添加到 DOM)
+                document.body.appendChild(downloadLink);
+
+                // 6. 模拟点击链接以触发下载
+                downloadLink.click();
+
+                // 7. 清理: 从 DOM 中移除链接元素，并释放 URL
+                document.body.removeChild(downloadLink);
+                URL.revokeObjectURL(audioUrl); // 释放内存
+
+                console.log("文件已触发下载");
+
+                // 停止所有媒体轨道
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.onerror = function(event) {
+                console.error("MediaRecorder 发生错误:", event.error);
+            };
+
+            // 开始录制
+            mediaRecorder.start();
+
+            console.log("录制开始...");
+        } catch (err) {
+            console.error("无法访问麦克风:", err);
+        }
+    }
+
+    function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+        }
+    }
+
+    // --- HTML ---
+    // <button onclick="startRecording()">开始录制</button>
+    // <button onclick="stopRecording()">停止录制</button>
+</script>
+</html>
+
+
+
+
