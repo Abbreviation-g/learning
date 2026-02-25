@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>音频录制与下载 (PCM Float32 16kHz Mono)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        #log {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            height: 200px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .status-recording {
+            background-color: #ffcccc;
+            color: #cc0000;
+        }
+        .status-idle {
+            background-color: #ccffcc;
+            color: #006600;
+        }
+    </style>
+</head>
+<body>
+
+<h1>音频录制与下载 (PCM Float32, 16kHz, Mono)</h1>
+<button id="startBtn">开始录音</button>
+<button id="stopBtn" disabled>停止录音</button>
+<span id="statusText" class="status status-idle">就绪</span>
+
+<div id="log"></div>
+
+<script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let audioContext;
+    let destinationNode;
+    let recordingStartTime;
+
+    /**
+     * 记录日志到页面
+     */
+    function log(message) {
+        const logDiv = document.getElementById('log');
+        logDiv.innerHTML += '<p>' + new Date().toLocaleTimeString() + ' - ' + message + '</p>';
+        logDiv.scrollTop = logDiv.scrollHeight; // 自动滚动到底部
+    }
+
+    /**
+     * 更新状态显示
+     */
+    function updateStatus(isRecording) {
+        const statusSpan = document.getElementById('statusText');
+        if (isRecording) {
+            statusSpan.textContent = '录音中...';
+            statusSpan.className = 'status status-recording';
+        } else {
+            statusSpan.textContent = '就绪';
+            statusSpan.className = 'status status-idle';
+        }
+    }
+
+    /**
+     * 开始录音流程
+     */
+    async function startRecording() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            log("录音已在进行中。");
+            return;
+        }
+
+        log("正在请求麦克风权限...");
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            log("麦克风权限已获取。");
+
+            // 创建 OfflineAudioContext 用于重采样到 16kHz
+            const targetSampleRate = 16000;
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // 创建 MediaStreamAudioSourceNode
+            const source = audioContext.createMediaStreamSource(stream);
+
+            // 创建一个足够大的 OfflineAudioContext 来处理整个录音 (可以根据预期最大长度调整)
+            // 这里先创建一个临时的 OfflineAudioContext 用于处理数据块
+            // 更好的方法是使用 ScriptProcessorNode 或 AudioWorklet 来实时处理
+            // 但为了简化和兼容性，我们先用 MediaRecorder 录制，然后离线重采样
+
+            // 重新使用 MediaRecorder，但这次是为了获取原始数据
+            // 实际上，MediaRecorder 录制的是压缩格式，无法直接获取原始 Float32
+            // 所以，我们必须使用 ScriptProcessorNode 或 AudioWorklet 来实时捕获 Float32 数据
+            // 下面是使用 ScriptProcessorNode 的修正版方法
+
+            // 重新创建 AudioContext
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const sourceNode = audioContext.createMediaStreamSource(stream);
+
+            // 创建 ScriptProcessorNode (已弃用，但仍是实现此功能的常用方式之一)
+            const bufferSize = 4096; // 也可以是 8192 或其他值
+            const scriptProcessor = audioContext.createScriptProcessor(bufferSize, 1, 1); // 1输入通道，1输出通道
+
+            // 用于存储收集到的 16kHz Float32 数据
+            const collectedSamples = [];
+
+            scriptProcessor.onaudioprocess = (e) => {
+                if (mediaRecorder.state !== 'recording') return; // 确保只在录音时处理
+
+                const inputData = e.inputBuffer.getChannelData(0); // 获取单通道数据
+                const originalSampleRate = audioContext.sampleRate;
+
+                // --- 重采样到 16kHz ---
+                // 这是一个简单的插值方法，质量不高
+                // 生产环境应使用更专业的重采样库
+                const ratio = originalSampleRate / targetSampleRate;
+                const newLength = Math.ceil(inputData.length / ratio);
+                for (let i = 0; i < newLength; i++) {
+                    const index = Math.floor(i * ratio);
+                    // 简单取样，不做插值
+                    if (index < inputData.length) {
+                        collectedSamples.push(inputData[index]);
+                    }
+                }
+            };
+
+            // 连接节点
+            sourceNode.connect(scriptProcessor);
+            scriptProcessor.connect(audioContext.destination); // 必须连接才能触发 onaudioprocess
+
+            // 存储引用以便停止时清理
+            destinationNode = scriptProcessor;
+
+            // 模拟 MediaRecorder 的状态
+            mediaRecorder = {
+                state: 'inactive',
+                start: () => {
+                    mediaRecorder.state = 'recording';
+                    recordingStartTime = Date.now();
+                    log("录音已开始。");
+                },
+                stop: () => {
+                    if (mediaRecorder.state !== 'recording') return;
+                    mediaRecorder.state = 'inactive';
+                    log(`录音已停止，时长: ${(Date.now() - recordingStartTime)/1000}s`);
+
+                    // 处理收集到的数据
+                    const float32Array = new Float32Array(collectedSamples);
+                    downloadPCM(float32Array, targetSampleRate);
+                },
+                stream: stream // 模拟属性
+            };
+            mediaRecorder.start();
+
+            updateStatus(true);
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+
+        } catch (err) {
+            log("录音启动失败: " + err.name + ": " + err.message);
+        }
+    }
+
+
+    /**
+     * 将 Float32Array 数据转换为 PCM 格式并下载
+     * @param {Float32Array} audioData - 16kHz 单通道浮点数据
+     * @param {number} sampleRate - 采样率 (e.g., 16000)
+     */
+    function downloadPCM(audioData, sampleRate) {
+        log(`开始导出 ${audioData.length} 个采样点的 PCM 数据...`);
+
+        // Float32Array 的 buffer 本身就是 Little Endian 的 32-bit float
+        // 创建一个 DataView 来验证或进行字节序操作（如果需要的话）
+        // 但 JavaScript 的 Float32Array 已经是目标格式，可以直接使用其 buffer
+        const pcmBuffer = audioData.buffer;
+
+        // 创建 Blob
+        const blob = new Blob([pcmBuffer], { type: 'application/octet-stream' }); // 或 'audio/x-pcm'
+
+        // 创建下载链接
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `recording_${sampleRate}Hz_float32_le.pcm`; // 文件名
+
+        document.body.appendChild(a);
+        a.click();
+
+        // 清理
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            log("PCM 文件下载完成。");
+        }, 100);
+    }
+
+
+    /**
+     * 停止录音流程
+     */
+    function stopRecording() {
+        if (!mediaRecorder || mediaRecorder.state !== 'recording') {
+            log("录音未在进行中。");
+            return;
+        }
+
+        // 调用模拟的 stop 方法
+        mediaRecorder.stop();
+
+        // 断开音频节点连接
+        if (destinationNode) {
+            destinationNode.disconnect();
+            destinationNode = null;
+        }
+        if (audioContext && (audioContext.state === 'running' || audioContext.state === 'suspended')) {
+            audioContext.close();
+            audioContext = null;
+        }
+
+        updateStatus(false);
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+    }
+
+    // 绑定按钮事件
+    document.getElementById('startBtn').addEventListener('click', startRecording);
+    document.getElementById('stopBtn').addEventListener('click', stopRecording);
+
+</script>
+
+</body>
+</html>

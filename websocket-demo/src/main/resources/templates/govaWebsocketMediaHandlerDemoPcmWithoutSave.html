@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<form>
+    <!-- 使用 table 来对齐 -->
+    <table>
+        <!-- 第一行：websocket path -->
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">websocket path:</td>
+            <td><input type="text" id="path" value="ws://172.16.31.248:29188/ytj/websocket"/></td>
+        </tr>
+
+        <!-- 第二行：requestId -->
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">requestId:</td>
+            <td><input type="text" id="requestId"/></td>
+        </tr>
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">message:</td>
+            <td><textarea id="messageInput" rows="5" cols="50"></textarea></td>
+        </tr>
+
+        <!-- 第三行：开始录音按钮 -->
+        <tr>
+            <td><input type="button" value="开始录音" onclick="startRecording()"/></td>
+            <td><input type="button" value="停止录音" onclick="stopRecording()"/></td>
+        </tr>
+    </table>
+</form>
+</body>
+
+<script type="text/javascript">
+    var socket;
+    var audioContext;
+    var mediaStream;
+    var scriptProcessor;
+    var analyser;
+
+    function startRecording() {
+        // ws://127.0.0.1:29188/websocket
+        var requestId = document.getElementById("requestId").value;
+        var path = document.getElementById("path").value;
+        let messageText = document.getElementById("messageInput");
+        socket = new WebSocket(path + "/" + requestId);
+
+        // 添加WebSocket事件处理
+        socket.onclose = function (event) {
+            console.log('WebSocket连接已关闭:', event.code, event.reason);
+            // messageText.value = event.data;
+        };
+
+        socket.onerror = function (error) {
+            console.error('WebSocket错误:', error);
+            // messageText.value = error.data;
+        };
+
+        socket.onopen = function () {
+            console.log('WebSocket连接已打开');
+            let data = "{'appId':'535571678175365', 'xtoken':'80249486-f432-4f4c-8147-e38bac7c6d86'}"
+            socket.send(data)
+        };
+        socket.onmessage = function (event) {
+            console.log('WebSocket消息:', event.data);
+            messageText.value = event.data;
+        };
+
+        // 获取麦克风权限
+        navigator.mediaDevices.getUserMedia({audio: true})
+            .then(stream => {
+                mediaStream = stream;
+
+                // 创建AudioContext
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                    sampleRate: 16000 // 设置采样率为16kHz
+                });
+
+                // 创建媒体流源
+                const mediaStreamSource = audioContext.createMediaStreamSource(stream);
+
+                // 创建分析器（可选，用于调试）
+                analyser = audioContext.createAnalyser();
+
+                // 创建脚本处理器节点，用于获取原始音频数据
+                // 缓冲区大小设为2048，单通道，确保数据块大小不超过8192字节
+                scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
+
+                // 连接节点
+                mediaStreamSource.connect(analyser);
+                analyser.connect(scriptProcessor);
+                scriptProcessor.connect(audioContext.destination);
+
+                // 处理音频数据
+                scriptProcessor.onaudioprocess = function (e) {
+                    // 获取输入缓冲区的第一个通道的数据
+                    const inputData = e.inputBuffer.getChannelData(0);
+
+                    // 通过WebSocket发送数据
+                    if (socket && socket.readyState === WebSocket.OPEN) {
+                        const slice = inputData.buffer.slice(
+                            inputData.byteOffset,
+                            inputData.byteOffset + inputData.byteLength
+                        );
+                        socket.send(slice);
+                    }
+                };
+            })
+            .catch(error => console.error('获取麦克风失败:', error));
+    }
+
+    function stopRecording() {
+        // 停止音频处理
+        if (scriptProcessor) {
+            scriptProcessor.disconnect();
+            scriptProcessor = null;
+        }
+
+        // 停止媒体流
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            mediaStream = null;
+        }
+
+        // 关闭AudioContext
+        if (audioContext) {
+            audioContext.close();
+            audioContext = null;
+        }
+
+        // 关闭WebSocket
+        if (socket) {
+            socket.close();
+            socket = null;
+        }
+    }
+
+</script>
+</html>
+
+
+
+

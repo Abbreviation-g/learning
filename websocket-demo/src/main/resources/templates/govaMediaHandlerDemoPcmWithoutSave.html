@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<form>
+    <!-- 使用 table 来对齐 -->
+    <table>
+        <!-- 第一行：websocket path -->
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">websocket path:</td>
+            <td><input type="text" id="path" value="ws://172.16.31.248:29188/ytj/websocket"/></td>
+        </tr>
+
+        <!-- 第二行：requestId -->
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">requestId:</td>
+            <td><input type="text" id="requestId"/></td>
+        </tr>
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">message:</td>
+            <td><textarea id="messageInput" rows="5" cols="50"></textarea></td>
+        </tr>
+
+
+        <!-- 第三行：开始录音按钮 -->
+        <tr>
+            <td><input type="button" value="开始录音" onclick="startRecording()"/></td>
+            <td><input type="button" value="停止录音" onclick="stopRecording()"/></td>
+        </tr>
+    </table>
+</form>
+</body>
+
+<script type="text/javascript">
+    let isRecording = false;
+    let audioContext;
+    let processor;
+    let inputSource;
+    let mediaStream;
+    let asrSessionId = null;
+    let initialInputText = "";
+    let silenceTimer = null;
+    let lastHeardText = "";
+
+    let bastUrl = "http://127.0.0.1:29188/ytj/inference/asr"
+
+    function startSilenceTimer() {
+        stopSilenceTimer();
+        silenceTimer = setTimeout(() => {
+            console.log("[ASR] 15 seconds of silence detected, stopping recording...");
+            if (isRecording) {
+                stopRecording();
+            }
+        }, 15000);
+    }
+
+    function stopSilenceTimer() {
+        if (silenceTimer) {
+            clearTimeout(silenceTimer);
+            silenceTimer = null;
+        }
+    }
+    async function startRecording() {
+        console.log("[ASR] Start recording triggered");
+        try {
+            // Initialize Audio Context first to get permissions
+            console.log("[ASR] Requesting microphone access...");
+            mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            console.log("[ASR] Microphone access granted");
+
+            // Start session with backend
+            console.log("[ASR] Sending /asr/api/start request...");
+            const startResp = await fetch(bastUrl+'/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' ,
+                    "appId":"535571678175365"
+                },
+            });
+            console.log("[ASR] Start response status:", startResp.status);
+
+            if (!startResp.ok) {
+                const errText = await startResp.text();
+                console.error("[ASR] Start failed response:", errText);
+                throw new Error("启动语音服务失败: " + startResp.status);
+            }
+            const startData = await startResp.json();
+            console.log("[ASR] Session started, ID:", startData.session_id);
+            asrSessionId = startData.session_id;
+            lastHeardText = "";
+            startSilenceTimer();
+
+            // Save current text
+            initialInputText = document.getElementById('messageInput').value;
+
+            // Setup Audio Processing
+            console.log("[ASR] Initializing AudioContext with sampleRate 16000");
+            audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+            inputSource = audioContext.createMediaStreamSource(mediaStream);
+            // Buffer size 4096 leads to ~256ms latency @ 16k
+            processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+            inputSource.connect(processor);
+            processor.connect(audioContext.destination); // Needed for processing to happen
+
+            processor.onaudioprocess = (e) => {
+                if (!isRecording) return;
+                const inputData = e.inputBuffer.getChannelData(0);
+                const dataToSend = new Float32Array(inputData);
+                sendAudioChunk(dataToSend);
+            };
+
+            isRecording = true;
+
+        } catch (err) {
+            console.error("[ASR] Recording error:", err);
+            alert("无法启动录音: " + (err.message || "请检查麦克风权限"));
+            isRecording = false;
+        }
+    }
+
+    async function sendAudioChunk(data) {
+        if (!isRecording || !asrSessionId) return;
+        try {
+            const resp = await fetch(bastUrl+`/send?session_id=${asrSessionId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/octet-stream' },
+                body: data
+            });
+            if (resp.ok) {
+                const resData = await resp.json();
+                // console.log("[ASR] Chunk processed: ", resData);
+                if (resData.text) {
+                    console.log("[ASR] Partial Text:", resData.text);
+                    if (resData.text !== lastHeardText) {
+                        lastHeardText = resData.text;
+                        startSilenceTimer();
+                    }
+                    // Update input box with cumulative text
+                    const input = document.getElementById('messageInput');
+                    input.value = initialInputText + resData.text;
+                    updateCharCount();
+                }
+            } else {
+                console.error("[ASR] Chunk upload failed:", resp.status);
+            }
+        } catch (e) {
+            console.error("[ASR] Chunk send error", e);
+        }
+    }
+
+    async function stopRecording() {
+        console.log("[ASR] Stop recording triggered");
+        if (!isRecording) return;
+
+        // 立即停止录音标志，阻止新的 chunk 发送
+        isRecording = false;
+        stopSilenceTimer();
+        lastHeardText = "";
+
+        // 立即断开音频处理链路
+        try {
+            if (processor) {
+                processor.onaudioprocess = null;
+                processor.disconnect();
+                processor = null;
+            }
+            if (inputSource) {
+                inputSource.disconnect();
+                inputSource = null;
+            }
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            if (audioContext) {
+                await audioContext.close();
+                audioContext = null;
+            }
+            console.log("[ASR] Audio resources cleaned up");
+        } catch (e) {
+            console.error("[ASR] Error cleaning audio resources:", e);
+        }
+
+        // 发送结束请求
+        if (asrSessionId) {
+            const sessionToFinish = asrSessionId;
+            asrSessionId = null;
+            try {
+                console.log("[ASR] Sending finish request...");
+                const resp = await fetch(bastUrl+`/finish?session_id=${sessionToFinish}`, { method: 'POST' });
+                console.log("[ASR] Finish response status:", resp.status);
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    console.log("[ASR] Final Result:", data);
+                    if (data.text) {
+                        const input = document.getElementById('messageInput');
+                        input.value = initialInputText + data.text;
+                        updateCharCount();
+                    }
+                } else {
+                    console.error("[ASR] Finish request failed");
+                }
+            } catch(e) {
+                console.error("[ASR] Finish error", e);
+            }
+        }
+    }
+
+</script>
+</html>
+
+
+
+

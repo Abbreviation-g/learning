@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<form>
+    <!-- 使用 table 来对齐 -->
+    <table>
+        <!-- 第一行：websocket path -->
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">websocket path:</td>
+            <td><input type="text" id="path" value="ws://172.16.31.248:29188/ytj/websocket"/></td>
+        </tr>
+
+        <!-- 第二行：requestId -->
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">requestId:</td>
+            <td><input type="text" id="requestId"/></td>
+        </tr>
+
+        <!-- 第三行：开始录音按钮 -->
+        <tr>
+            <td><input type="button" value="开始录音" onclick="startRecording()"/></td>
+            <td><input type="button" value="停止录音" onclick="stopRecording()"/></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="button" value="保存为文件" onclick="saveToFile()"/></td>
+        </tr>
+    </table>
+</form>
+</body>
+
+<script type="text/javascript">
+    var socket;
+    var audioContext;
+    var mediaStream;
+    var scriptProcessor;
+    var analyser;
+    var recordedPCMData = [];
+
+    function startRecording() {
+        // ws://127.0.0.1:29188/websocket
+        var requestId = document.getElementById("requestId").value;
+        var path = document.getElementById("path").value;
+        socket = new WebSocket(path + "/" + requestId);
+
+        // 添加WebSocket事件处理
+        socket.onclose = function(event) {
+            console.log('WebSocket连接已关闭:', event.code, event.reason);
+        };
+
+        socket.onerror = function(error) {
+            console.error('WebSocket错误:', error);
+        };
+
+        socket.onopen = function() {
+            console.log('WebSocket连接已打开');
+        };
+
+        // 获取麦克风权限
+        navigator.mediaDevices.getUserMedia({audio: true})
+            .then(stream => {
+                mediaStream = stream;
+
+                // 创建AudioContext
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                    sampleRate: 16000 // 设置采样率为16kHz
+                });
+
+                // 创建媒体流源
+                const mediaStreamSource = audioContext.createMediaStreamSource(stream);
+
+                // 创建分析器（可选，用于调试）
+                analyser = audioContext.createAnalyser();
+
+                // 创建脚本处理器节点，用于获取原始音频数据
+                // 缓冲区大小设为2048，单通道，确保数据块大小不超过8192字节
+                scriptProcessor = audioContext.createScriptProcessor(256, 1, 1);
+
+                // 连接节点
+                mediaStreamSource.connect(analyser);
+                analyser.connect(scriptProcessor);
+                scriptProcessor.connect(audioContext.destination);
+
+                // 处理音频数据
+                scriptProcessor.onaudioprocess = function(e) {
+                    // 获取输入缓冲区的第一个通道的数据
+                    const inputData = e.inputBuffer.getChannelData(0);
+
+                    // 将Float32Array转换为ArrayBuffer（PCM float32 Little Endian）
+                    const float32Array = new Float32Array(inputData);
+                    const arrayBuffer = float32Array.buffer;
+
+                    // 保存录制的PCM数据
+                    recordedPCMData.push(new Float32Array(float32Array));
+
+                    // 通过WebSocket发送数据
+                    if (socket && socket.readyState === WebSocket.OPEN) {
+                        const slice = inputData.buffer.slice(
+                            inputData.byteOffset,
+                            inputData.byteOffset + inputData.byteLength
+                        );
+                        socket.send(slice);
+                    }
+                };
+            })
+            .catch(error => console.error('获取麦克风失败:', error));
+    }
+
+    function stopRecording() {
+        // 停止音频处理
+        if (scriptProcessor) {
+            scriptProcessor.disconnect();
+            scriptProcessor = null;
+        }
+
+        // 停止媒体流
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            mediaStream = null;
+        }
+
+        // 关闭AudioContext
+        if (audioContext) {
+            audioContext.close();
+            audioContext = null;
+        }
+
+        // 关闭WebSocket
+        if (socket) {
+            socket.close();
+            socket = null;
+        }
+    }
+
+    function saveToFile() {
+        if (recordedPCMData.length === 0) {
+            console.log('没有录制的数据');
+            return;
+        }
+
+        // 合并所有PCM数据
+        let totalLength = 0;
+        for (let i = 0; i < recordedPCMData.length; i++) {
+            totalLength += recordedPCMData[i].length;
+        }
+
+        const mergedPCM = new Float32Array(totalLength);
+        let offset = 0;
+        for (let i = 0; i < recordedPCMData.length; i++) {
+            mergedPCM.set(recordedPCMData[i], offset);
+            offset += recordedPCMData[i].length;
+        }
+
+        // 清空录制的数据
+        recordedPCMData = [];
+
+        // 创建WAV文件
+        const sampleRate = 16000;
+        const numChannels = 1;
+        const bitsPerSample = 32;
+        const bytesPerSample = bitsPerSample / 8;
+        const blockAlign = numChannels * bytesPerSample;
+        const byteRate = sampleRate * blockAlign;
+        const dataSize = mergedPCM.length * bytesPerSample;
+
+        // 创建WAV文件头
+        const header = new ArrayBuffer(44);
+        const view = new DataView(header);
+
+        // RIFF标识符
+        view.setUint32(0, 0x52494646, false); // "RIFF"
+        // 文件长度
+        view.setUint32(4, 36 + dataSize, true);
+        // WAVE标识符
+        view.setUint32(8, 0x57415645, false); // "WAVE"
+        // fmt标识符
+        view.setUint32(12, 0x666d7420, false); // "fmt "
+        // fmt块长度
+        view.setUint32(16, 16, true);
+        // 格式类型 (PCM)
+        view.setUint16(20, 1, true);
+        // 通道数
+        view.setUint16(22, numChannels, true);
+        // 采样率
+        view.setUint32(24, sampleRate, true);
+        // 字节率
+        view.setUint32(28, byteRate, true);
+        // 块对齐
+        view.setUint16(32, blockAlign, true);
+        // 位深度
+        view.setUint16(34, bitsPerSample, true);
+        // data标识符
+        view.setUint32(36, 0x64617461, false); // "data"
+        // 数据长度
+        view.setUint32(40, dataSize, true);
+
+        // 创建数据部分
+        const dataBuffer = new ArrayBuffer(dataSize);
+        const dataView = new DataView(dataBuffer);
+
+        // 将Float32转换为int32（WAV文件使用整数格式）
+        for (let i = 0; i < mergedPCM.length; i++) {
+            const sample = mergedPCM[i] * 0x7FFFFFFF; // 缩放为int32范围
+            dataView.setInt32(i * bytesPerSample, sample, true);
+        }
+
+        // 合并头部和数据
+        const wavBuffer = new ArrayBuffer(header.byteLength + dataBuffer.byteLength);
+        const wavView = new DataView(wavBuffer);
+
+        // 复制头部
+        for (let i = 0; i < header.byteLength; i++) {
+            wavView.setUint8(i, new Uint8Array(header)[i]);
+        }
+
+        // 复制数据
+        for (let i = 0; i < dataBuffer.byteLength; i++) {
+            wavView.setUint8(header.byteLength + i, new Uint8Array(dataBuffer)[i]);
+        }
+
+        // 创建Blob并下载
+        const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'recording.wav';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        console.log('文件已保存为 recording.wav');
+    }
+</script>
+</html>
+
+
+
+

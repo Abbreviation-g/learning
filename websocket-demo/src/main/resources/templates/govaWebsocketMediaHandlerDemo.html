@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<form>
+    <!-- 使用 table 来对齐 -->
+    <table>
+        <!-- 第一行：websocket path -->
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">websocket path:</td>
+            <td><input type="text" id="path" value="ws://127.0.0.1:29188/ytj/websocket"/></td>
+        </tr>
+
+        <!-- 第二行：requestId -->
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">requestId:</td>
+            <td><input type="text" id="requestId"/></td>
+        </tr>
+
+        <!-- 第三行：开始录音按钮 -->
+        <tr>
+            <td><input type="button" value="开始录音" onclick="startRecording()"/></td>
+            <td><input type="button" value="停止录音" onclick="stopRecording()"/></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="button" value="保存为文件" onclick="saveToFile()"/></td>
+        </tr>
+    </table>
+</form>
+</body>
+
+<script type="text/javascript">
+    let recordedChunks = [];
+
+    var socket;
+    var mediaRecorder;
+
+    function startRecording() {
+        // ws://127.0.0.1:29188/websocket
+        var requestId = document.getElementById("requestId").value;
+        var path = document.getElementById("path").value;
+        socket = new WebSocket(path + "/" + requestId);
+        // 获取麦克风权限
+        navigator.mediaDevices.getUserMedia({audio: true})
+            .then(stream => {
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus',
+                    audioBitsPerSecond: 16000 // 64kbps比特率，平衡质量与延迟
+                });
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0 && socket.readyState === WebSocket.OPEN) {
+                        socket.send(e.data);
+                        recordedChunks.push(e.data);
+                    }
+                };
+                mediaRecorder.onstop = () => {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+
+// 开始录制，时间片设为20ms
+                mediaRecorder.start(200);
+            })
+            .catch(error => console.error('获取麦克风失败:', error));
+    }
+
+    function stopRecording() {
+        if (mediaRecorder != null) {
+            mediaRecorder.stop();
+        }
+        if (socket != null) {
+            socket.close();
+        }
+    }
+    function saveToFile() {
+        // 1. 将所有数据块合并成一个完整的 Blob
+        const completeBlob = new Blob(recordedChunks, { type: 'audio/webm' }); // 指定最终文件类型
+
+        // 清空数组，为下次录制做准备
+        recordedChunks = [];
+
+        // 2. 为 Blob 创建一个临时 URL
+        const audioUrl = URL.createObjectURL(completeBlob);
+
+        // 3. 创建一个隐藏的 <a> 元素
+        const downloadLink = document.createElement('a');
+        downloadLink.href = audioUrl;
+
+        // 4. 设置 download 属性，指定下载的文件名
+        downloadLink.download = 'recording.webm'; // 用户下载时的默认文件名
+
+        // 5. 将链接添加到 DOM (为了在某些浏览器中正常工作，需要添加到 DOM)
+        document.body.appendChild(downloadLink);
+
+        // 6. 模拟点击链接以触发下载
+        downloadLink.click();
+
+        // 7. 清理: 从 DOM 中移除链接元素，并释放 URL
+        document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(audioUrl); // 释放内存
+
+        console.log("文件已触发下载");
+    }
+
+
+</script>
+</html>
+
+
+
+

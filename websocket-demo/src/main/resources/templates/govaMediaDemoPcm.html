@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<form>
+    <!-- 使用 table 来对齐 -->
+    <table>
+        <!-- 第一行：websocket path -->
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">websocket path:</td>
+            <td><input type="text" id="path" value="ws://172.16.31.248:29188/ytj/websocket"/></td>
+        </tr>
+
+        <!-- 第二行：requestId -->
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">requestId:</td>
+            <td><input type="text" id="sessionId"/></td>
+        </tr>
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">message:</td>
+            <td><textarea id="messageInput" rows="5" cols="50"></textarea></td>
+        </tr>
+
+        <!-- 第三行：开始录音按钮 -->
+        <tr>
+            <td><input type="button" value="开始录音" onclick="startRecording()"/></td>
+            <td><input type="button" value="停止录音" onclick="stopRecording()"/></td>
+        </tr>
+    </table>
+</form>
+</body>
+
+<script type="text/javascript">
+    var audioContext;
+    var mediaStream;
+    var scriptProcessor;
+    var analyser;
+
+    let bastUrl = "http://127.0.0.1:29188/ytj/inference/asr"
+    let xtoken = "1a165d9a-c8a3-4f33-9f4b-54fcecaa1a24";
+    let appId = "535571678175365";
+    var sessionId;
+
+    async function startRecording() {
+        // 获取麦克风权限
+        navigator.mediaDevices.getUserMedia({audio: true})
+            .then(async stream => {
+                const startResp = await fetch(bastUrl + '/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "appId": appId,
+                        "x-token": xtoken,
+                    },
+                });
+                if (!startResp.ok) {
+                    const errText = await startResp.text();
+                    console.error("[ASR] Start failed response:", errText);
+                    throw new Error("启动语音服务失败: " + startResp.status);
+                }
+                const startData = await startResp.json();
+                console.log("[ASR] Session started, ID:", startData.data);
+                sessionId = startData.data.session_id;
+
+                mediaStream = stream;
+
+                // 创建AudioContext
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                    sampleRate: 16000 // 设置采样率为16kHz
+                });
+
+                // 创建媒体流源
+                const mediaStreamSource = audioContext.createMediaStreamSource(stream);
+
+                // 创建分析器（可选，用于调试）
+                analyser = audioContext.createAnalyser();
+
+                // 创建脚本处理器节点，用于获取原始音频数据
+                // 缓冲区大小设为2048，单通道，确保数据块大小不超过8192字节
+                scriptProcessor = audioContext.createScriptProcessor(256, 1, 1);
+
+                // 连接节点
+                mediaStreamSource.connect(analyser);
+                analyser.connect(scriptProcessor);
+                scriptProcessor.connect(audioContext.destination);
+
+                // 处理音频数据
+                scriptProcessor.onaudioprocess = async function (e) {
+                    // 获取输入缓冲区的第一个通道的数据
+                    const inputData = e.inputBuffer.getChannelData(0);
+
+                    // 通过WebSocket发送数据
+                    const slice = inputData.buffer.slice(
+                        inputData.byteOffset,
+                        inputData.byteOffset + inputData.byteLength
+                    );
+
+                    // 创建 FormData 对象
+                    const formData = new FormData();
+                    const float32Array = new Float32Array(inputData);
+                    let dataBlob = new Blob([float32Array], {type: 'application/octet-stream'});
+                    // 将 Blob 添加为一个文件项 ('data' 是后端 @RequestParam 的参数名)
+                    formData.append('data', dataBlob, 'my_data_file.bin'); // 'my_data_file.bin' 是文件名，可选
+                    // 你还可以添加其他字段，例如一些元数据
+                    formData.append('description', 'This is my binary data');
+                    formData.append('category', 'test');
+
+                    // 创建 FormData 对象
+                    // const formData = new FormData();
+                    // // 假设你有一个 ArrayBuffer 或 Uint8Array
+                    // let myByteArray = new Uint8Array([72, 101, 108, 108, 111]);
+                    // // 将其转换为 Blob
+                    // let dataBlob = new Blob([myByteArray], {type: 'application/octet-stream'});
+                    // // 将 Blob 添加为一个文件项 ('data' 是后端 @RequestParam 的参数名)
+                    // formData.append('data', dataBlob, 'my_data_file.bin'); // 'my_data_file.bin' 是文件名，可选
+
+                    // socket.send(slice);
+                    const sendResp = await fetch(bastUrl + '/send' + "/" + sessionId, {
+                        method: 'POST',
+                        headers: {
+                            "appId": appId,
+                            "x-token": xtoken,
+                        },
+                        body: formData,
+                    });
+                    const sendData = await sendResp.json();
+                    console.log("[ASR] Session chunk, data:", sendData);
+                    document.getElementById("messageInput").value += sendData;
+                };
+            })
+            .catch(error => console.error('获取麦克风失败:', error));
+    }
+
+    async function stopRecording() {
+        // 停止音频处理
+        if (scriptProcessor) {
+            scriptProcessor.disconnect();
+            scriptProcessor = null;
+        }
+
+        // 停止媒体流
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            mediaStream = null;
+        }
+
+        // 关闭AudioContext
+        if (audioContext) {
+            audioContext.close();
+            audioContext = null;
+        }
+
+        const finishResp = await fetch(bastUrl + '/finish' + "/" + sessionId, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                "appId": appId,
+                "x-token": xtoken,
+            },
+        });
+        const finishData = await finishResp.json();
+        console.log("[ASR] Session finish, data:", finishData);
+        document.getElementById("messageInput").value += finishData;
+        startSilenceTimer();
+
+        console.log("bastUrl + '/send'\n" + sendResp);
+    }
+
+</script>
+</html>
+
+
+
+
