@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<form>
+    <!-- 使用 table 来对齐 -->
+    <table>
+        <!-- 第一行：websocket path -->
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">gova host path:</td>
+            <td><input type="text" id="path" value="http://127.0.0.1:29188/ytj"/></td>
+        </tr>
+
+        <!-- 第二行：sessionId -->
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">sessionId:</td>
+            <td><input type="text" id="sessionId"/></td>
+        </tr>
+        <tr>
+            <td style="text-align: right; padding-right: 10px;">message:</td>
+            <td><textarea id="messageInput" rows="5" cols="50"></textarea></td>
+        </tr>
+
+        <!-- 第三行：开始录音按钮 -->
+        <tr>
+            <td><input type="button" value="开始录音" onclick="startRecording()"/></td>
+            <td><input type="button" value="停止录音" onclick="stopRecording()"/></td>
+        </tr>
+    </table>
+</form>
+</body>
+
+<script type="text/javascript">
+    let startPath = "/inference/asr/start"
+    let finishPath = "/inference/asr/finish"
+    let sendPath = "/inference/asr/send"
+    let appId = "535571678175365"
+    let xtoken = "80249486-f432-4f4c-8147-e38bac7c6d86"
+
+    let asrSessionId = null;
+
+    var audioContext;
+    var mediaStream;
+    var scriptProcessor;
+    var analyser;
+
+    async function startSession() {
+        let hostPath = document.getElementById("path").value;
+        const startResp = await fetch(hostPath + startPath, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                "appId": appId,
+                "xtoken": xtoken
+            },
+        });
+        console.log("[ASR] Start response status:", startResp.status);
+
+        if (!startResp.ok) {
+            const errText = await startResp.text();
+            console.error("[ASR] Start failed response:", errText);
+            throw new Error("启动语音服务失败: " + startResp.status);
+        }
+        const startData = await startResp.json();
+        asrSessionId = startData.data.session_id;
+        console.log("[ASR] Session started, ID:", asrSessionId);
+    }
+
+    let messageText = document.getElementById("messageInput");
+
+    async function stopSession() {
+        let hostPath = document.getElementById("path").value;
+        const stopResp = await fetch(hostPath + finishPath + "/" + asrSessionId, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                "appId": appId,
+                "xtoken": xtoken
+            },
+        });
+        console.log("[ASR] Stop response status:", stopResp.status);
+
+        if (!stopResp.ok) {
+            const errText = await stopResp.text();
+            console.error("[ASR] Stop failed response:", errText);
+            throw new Error("停止语音服务失败: " + stopResp.status);
+        }
+        const stopJson = await stopResp.json();
+        console.log("[ASR] Session started, ID:", stopJson);
+        messageText.value = JSON.stringify(stopJson);
+    }
+
+    async function sendSession(buffer) {
+        let hostPath = document.getElementById("path").value;
+        const formData = new FormData();
+        // 1. 将 buffer 包装成 Blob
+//    application/octet-stream 是一个通用的二进制数据类型
+//    如果你知道 buffer 的具体格式 (如 audio/wav, image/png)，请使用相应的 MIME type
+        const blob = new Blob([buffer], {type: 'application/octet-stream'});
+
+// 2. 将 Blob 添加到 FormData 中，key 必须是 'data'
+//    第三个参数 'audio_chunk.bin' 是一个虚拟的文件名，可选但推荐提供
+        formData.append('data', blob, 'audio_chunk.bin');
+        const sendResp = await fetch(hostPath + sendPath + "/" + asrSessionId, {
+            method: 'POST',
+            headers: {
+                "appId": appId,
+                "xtoken": xtoken
+            },
+            body: formData
+        });
+        console.log("[ASR] Send response status:", sendResp.status);
+
+        if (!sendResp.ok) {
+            const errText = await sendResp.text();
+            console.error("[ASR] Send failed response:", errText);
+            throw new Error("发送语音服务失败: " + sendResp.status);
+        }
+        const sendJson = await sendResp.json();
+        console.log("[ASR] Session Sent, ID:", JSON.stringify(sendJson));
+        messageText.value = JSON.stringify(sendJson);
+    }
+
+    function startRecording() {
+        // ws://127.0.0.1:29188/websocket
+        let sessionIdInput = document.getElementById("sessionId");
+
+        startSession();
+
+        // 获取麦克风权限
+        navigator.mediaDevices.getUserMedia({audio: true})
+            .then(stream => {
+                mediaStream = stream;
+
+                // 创建AudioContext
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                    sampleRate: 16000 // 设置采样率为16kHz
+                });
+
+                // 创建媒体流源
+                const mediaStreamSource = audioContext.createMediaStreamSource(stream);
+
+                // 创建分析器（可选，用于调试）
+                analyser = audioContext.createAnalyser();
+
+                // 创建脚本处理器节点，用于获取原始音频数据
+                // 缓冲区大小设为2048，单通道，确保数据块大小不超过8192字节
+                scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
+
+                // 连接节点
+                mediaStreamSource.connect(analyser);
+                analyser.connect(scriptProcessor);
+                scriptProcessor.connect(audioContext.destination);
+
+                // 处理音频数据
+                scriptProcessor.onaudioprocess = function (e) {
+                    // 获取输入缓冲区的第一个通道的数据
+                    const inputData = e.inputBuffer.getChannelData(0);
+                    let buffer = inputData.buffer;
+                    sendSession(buffer);
+                    // 通过WebSocket发送数据
+//                        socket.send(inputData.buffer);
+                };
+            })
+            .catch(error => console.error('获取麦克风失败:', error));
+    }
+
+    function stopRecording() {
+        // 停止音频处理
+        if (scriptProcessor) {
+            scriptProcessor.disconnect();
+            scriptProcessor = null;
+        }
+
+        // 停止媒体流
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            mediaStream = null;
+        }
+
+        // 关闭AudioContext
+        if (audioContext) {
+            audioContext.close();
+            audioContext = null;
+        }
+
+        stopSession();
+    }
+
+</script>
+</html>
+
+
+
+

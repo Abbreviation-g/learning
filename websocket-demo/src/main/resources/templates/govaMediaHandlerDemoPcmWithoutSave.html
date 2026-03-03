@@ -43,6 +43,7 @@
     let initialInputText = "";
     let silenceTimer = null;
     let lastHeardText = "";
+    let xtoken = "80249486-f432-4f4c-8147-e38bac7c6d86"
 
     let bastUrl = "http://127.0.0.1:29188/ytj/inference/asr"
 
@@ -62,20 +63,23 @@
             silenceTimer = null;
         }
     }
+
     async function startRecording() {
         console.log("[ASR] Start recording triggered");
         try {
             // Initialize Audio Context first to get permissions
             console.log("[ASR] Requesting microphone access...");
-            mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaStream = await navigator.mediaDevices.getUserMedia({audio: true});
             console.log("[ASR] Microphone access granted");
 
             // Start session with backend
             console.log("[ASR] Sending /asr/api/start request...");
-            const startResp = await fetch(bastUrl+'/start', {
+            const startResp = await fetch(bastUrl + '/start', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' ,
-                    "appId":"535571678175365"
+                headers: {
+                    'Content-Type': 'application/json',
+                    "appId": "535571678175365",
+                    "xtoken": xtoken
                 },
             });
             console.log("[ASR] Start response status:", startResp.status);
@@ -96,7 +100,7 @@
 
             // Setup Audio Processing
             console.log("[ASR] Initializing AudioContext with sampleRate 16000");
-            audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+            audioContext = new (window.AudioContext || window.webkitAudioContext)({sampleRate: 16000});
             inputSource = audioContext.createMediaStreamSource(mediaStream);
             // Buffer size 4096 leads to ~256ms latency @ 16k
             processor = audioContext.createScriptProcessor(4096, 1, 1);
@@ -123,9 +127,9 @@
     async function sendAudioChunk(data) {
         if (!isRecording || !asrSessionId) return;
         try {
-            const resp = await fetch(bastUrl+`/send?session_id=${asrSessionId}`, {
+            const resp = await fetch(bastUrl + `/send?session_id=${asrSessionId}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/octet-stream' },
+                headers: {'Content-Type': 'application/octet-stream', "xtoken": xtoken},
                 body: data
             });
             if (resp.ok) {
@@ -189,7 +193,7 @@
             asrSessionId = null;
             try {
                 console.log("[ASR] Sending finish request...");
-                const resp = await fetch(bastUrl+`/finish?session_id=${sessionToFinish}`, { method: 'POST' });
+                const resp = await fetch(bastUrl + `/finish?session_id=${sessionToFinish}`, {method: 'POST', headers: {"xtoken": xtoken}});
                 console.log("[ASR] Finish response status:", resp.status);
 
                 if (resp.ok) {
@@ -203,7 +207,7 @@
                 } else {
                     console.error("[ASR] Finish request failed");
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error("[ASR] Finish error", e);
             }
         }
