@@ -10,5 +10,6 @@
         }
     },
     "terminal.integrated.defaultProfile.windows": "PowerShell 7",
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.debug.settings.vmArgs": "--add-opens java.base/java.lang=ALL-UNNAMED"
 }
