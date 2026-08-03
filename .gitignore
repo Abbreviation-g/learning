@@ -25,3 +25,5 @@ hs_err_pid*
 /learning/.classpath
 /learning/.settings
 /learning/target
+
+bin
