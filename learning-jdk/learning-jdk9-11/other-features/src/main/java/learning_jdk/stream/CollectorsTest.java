@@ -1,5 +1,9 @@
 package learning_jdk.stream;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -72,47 +76,17 @@ public class CollectorsTest {
         sorts.forEach(s -> System.out.println(s.toString()));
     }
 
+    @Getter
+    @AllArgsConstructor
+    @ToString
     static class Dish {
         private final String name; // 名字
         private final boolean vegetarian;// 是否为素食
         private final int calories;// 热量
         private final Type type;// 类型
 
-        public Dish(String name, boolean vegetarian, int calories, Type type) {
-            this.name = name;
-            this.vegetarian = vegetarian;
-            this.calories = calories;
-            this.type = type;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public boolean isVegetarian() {
-            return vegetarian;
-        }
-
-        public int getCalories() {
-            return calories;
-        }
-
-        public Type getType() {
-            return type;
-        }
-
         public enum Type {
             MEAT, FISH, OTHER
-        }
-
-        @Override
-        public String toString() {
-            return "Dish{" +
-                    "name='" + name + '\'' +
-                    ", vegetarian=" + vegetarian +
-                    ", calories=" + calories +
-                    ", type=" + type +
-                    '}';
         }
     }
 }

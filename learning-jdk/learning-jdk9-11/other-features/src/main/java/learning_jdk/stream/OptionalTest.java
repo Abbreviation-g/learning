@@ -1,5 +1,7 @@
 package learning_jdk.stream;
 
+import lombok.AllArgsConstructor;
+
 import java.util.Optional;
 
 public class OptionalTest {
@@ -49,13 +51,9 @@ public class OptionalTest {
         Optional<Student> createOptByOf2 = Optional.ofNullable(student);
     }
 
+    @AllArgsConstructor
     static class Student {
         Integer age;
         String name;
-
-        Student(Integer age, String name) {
-            this.age = age;
-            this.name = name;
-        }
     }
 }

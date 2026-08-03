@@ -1,5 +1,8 @@
 package learning_jdk.stream;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
@@ -30,13 +33,9 @@ public class StreamOfNullable {
         System.out.println(names2);
     }
 
-    static class Person{
+    @Getter
+    @AllArgsConstructor
+    static class Person {
         private String name;
-        Person(String name) {
-            this.name = name;
-        }
-        public String getName(){
-            return name;
-        }
     }
 }
