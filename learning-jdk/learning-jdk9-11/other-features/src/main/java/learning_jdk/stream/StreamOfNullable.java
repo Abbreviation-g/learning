@@ -5,6 +5,7 @@ import lombok.Getter;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class StreamOfNullable {
@@ -26,10 +27,10 @@ public class StreamOfNullable {
 
         // 在flatmap中安全处理可能为null的元素
         List<Person> persons = List.of(new Person("name1"), new Person("name2"), new Person(null));
-        List<String> names=persons.stream().flatMap(p->Stream.ofNullable(p.getName())).toList();
+        List<String> names=persons.stream().flatMap(p->Stream.ofNullable(p.getName())).collect(Collectors.toList());
         System.out.println(names);
 
-        List<String> names2=persons.stream().map(p->p.getName()).toList();
+        List<String> names2=persons.stream().map(p->p.getName()).collect(Collectors.toList());
         System.out.println(names2);
     }
 

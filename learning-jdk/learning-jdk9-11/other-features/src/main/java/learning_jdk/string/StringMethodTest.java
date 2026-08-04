@@ -1,6 +1,7 @@
 package learning_jdk.string;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class StringMethodTest {
@@ -52,11 +53,11 @@ public class StringMethodTest {
 
         // 按照换行符拆分处理
         // 老方法
-        List<String> result1=Stream.of("hello\nworld\njava\npython\ncpp\ncsharp".split("\n")).toList();
+        List<String> result1=Stream.of("hello\nworld\njava\npython\ncpp\ncsharp".split("\n")).collect(Collectors.toList());
         System.out.println(result1);
 
         // 新方法 .lines()
-        List<String> result2 = str.lines().toList();
+        List<String> result2 = str.lines().collect(Collectors.toList());
         System.out.println(result2);
     }
 }

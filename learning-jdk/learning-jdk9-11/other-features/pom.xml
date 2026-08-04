@@ -14,8 +14,10 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
+    <!--maven.compiler.release 的优先级高于 source/target，一旦设置了 release，source/target 会被完全忽略。-->
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.release>11</maven.compiler.release>
     </properties>
 
     <dependencies>
