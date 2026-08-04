@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>learning-jdk9-11</module>
+        <module>learning-jdk12_17</module>
     </modules>
 
     <properties>
