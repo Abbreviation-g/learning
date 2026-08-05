@@ -12,6 +12,7 @@
         <module>learning-jdk9-11</module>
         <module>learning-jdk12_17</module>
         <module>learning-jdk18_21</module>
+        <module>learning-jdk22_25</module>
     </modules>
 
     <properties>
