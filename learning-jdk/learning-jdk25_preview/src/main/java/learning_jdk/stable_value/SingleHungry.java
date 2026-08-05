@@ -1,5 +1,6 @@
 package learning_jdk.stable_value;
 
+// cd .\learning-jdk25_preview\
 // java --enable-preview -cp target/classes learning_jdk.stable_value.SingleHungry
 
 public class SingleHungry {

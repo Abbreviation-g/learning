@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>learning-jdk</groupId>
-    <artifactId>learning-jdk22_25</artifactId>
+    <artifactId>learning-jdk25_preview</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -19,6 +19,19 @@
         <maven.compiler.release>25</maven.compiler.release>
     </properties>
 
-
-
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <release>25</release>
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

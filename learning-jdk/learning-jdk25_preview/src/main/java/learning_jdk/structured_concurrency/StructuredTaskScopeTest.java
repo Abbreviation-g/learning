@@ -8,6 +8,7 @@ import learning_jdk.structured_concurrency.OrderEntities.User;
 
 import static learning_jdk.structured_concurrency.OrderEntities.*;
 
+// cd .\learning-jdk25_preview\
 // java --enable-preview -cp target/classes learning_jdk.structured_concurrency.StructuredTaskScopeTest
 
 public class StructuredTaskScopeTest {

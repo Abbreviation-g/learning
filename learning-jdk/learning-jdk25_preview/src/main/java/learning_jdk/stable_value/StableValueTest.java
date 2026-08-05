@@ -5,6 +5,7 @@ import java.util.concurrent.StructuredTaskScope;
 
 import learning_jdk.structured_concurrency.StructuredTaskScopeTest;
 
+// // cd .\learning-jdk25_preview\
 // java --enable-preview -cp target/classes learning_jdk.stable_value.StableValueTest
 
 public class StableValueTest {

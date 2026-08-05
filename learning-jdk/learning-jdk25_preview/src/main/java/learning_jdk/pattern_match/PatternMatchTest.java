@@ -1,6 +1,7 @@
 package learning_jdk.pattern_match;
 
 // java25预览特性
+// cd .\learning-jdk25_preview\
 // java --enable-preview -cp target/classes learning_jdk.pattern_match.PatternMatchTest
 public class PatternMatchTest {
     public static void main(String[] args) {

@@ -1,0 +1,55 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "HelloWorld",
+            "request": "launch",
+            "mainClass": "HelloWorld",
+            "projectName": "learning-jdk22_25"
+        },
+        {
+            "type": "java",
+            "name": "ScopedValueTest",
+            "request": "launch",
+            "mainClass": "learning_jdk.scoped_value.ScopedValueTest",
+            "projectName": "learning-jdk22_25"
+        },
+        {
+            "type": "java",
+            "name": "Launch Current File",
+            "request": "launch",
+            "mainClass": "${file}",
+            "classPaths": [
+                "$Auto"
+            ],
+            "vmArgs": "--enable-preview --add-opens java.base/java.lang=ALL-UNNAMED",
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "java",
+            "name": "Launch learning-jdk22_25 (Preview)",
+            "request": "launch",
+            "mainClass": "learning_jdk.pattern_match.PatternMatchTest",
+            "projectName": "learning-jdk22_25",
+            "classPaths": [
+                "$Auto"
+            ],
+            "vmArgs": "--enable-preview",
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "java",
+            "name": "Launch StableValueTest",
+            "request": "launch",
+            "mainClass": "learning_jdk.stable_value.StableValueTest",
+            "projectName": "learning-jdk22_25",
+            "classPaths": [
+                "$Auto"
+            ],
+            "vmArgs": "--enable-preview",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/learning-jdk22_25"
+        }
+    ]
+}

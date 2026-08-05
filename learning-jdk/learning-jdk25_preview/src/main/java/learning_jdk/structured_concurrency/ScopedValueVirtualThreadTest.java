@@ -3,8 +3,8 @@ package learning_jdk.structured_concurrency;
 import java.util.concurrent.Executors;
 import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.TimeUnit;
-
-// java --enable-preview -cp target/classes learning_jdk.structured_concurrency.StructuredConcurrencyTest
+// cd .\learning-jdk25_preview\
+// java --enable-preview -cp target/classes learning_jdk.structured_concurrency.ScopedValueVirtualThreadTest
 public class ScopedValueVirtualThreadTest {
     private static final ScopedValue<String> USER_ID = ScopedValue.newInstance();
     private static final ScopedValue<String> REQUEST_ID = ScopedValue.newInstance();
