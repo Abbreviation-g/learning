@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.example.mysql.rcp.feature"
+      label="MySQL RCP Feature"
+      version="1.0.0.qualifier"
+      provider-name="Example">
+
+   <plugin
+         id="com.example.mysql.rcp"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.mysql.cj"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature id="com.example.mysql.rcp.feature" version="0.0.0">
+      <category name="mysql-rcp"/>
+   </feature>
+   <category-def name="mysql-rcp" label="MySQL RCP"/>
+</site>

@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: MySQL RCP Client
+Bundle-SymbolicName: com.example.mysql.rcp;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: com.example.mysql.rcp.Activator
+Bundle-Vendor: Example
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ org.eclipse.swt,
+ org.eclipse.jface,
+ com.mysql.cj
+Import-Package: org.osgi.framework

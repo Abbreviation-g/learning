@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?pde version="3.5"?>
+
+<product name="MySQL RCP Client" uid="com.example.mysql.rcp.product" id="com.example.mysql.rcp.product" application="com.example.mysql.rcp.application" version="1.0.0.qualifier" useFeatures="true" includeLaunchers="true">
+
+   <configIni use="default">
+   </configIni>
+
+   <launcherArgs>
+      <programArgs>-clearPersistedState</programArgs>
+      <vmArgs>-Xms128m -Xmx512m</vmArgs>
+   </launcherArgs>
+
+   <launcher name="mysql-rcp">
+      <win useIco="false"/>
+   </launcher>
+
+   <features>
+      <feature id="org.eclipse.rcp" version="0.0.0"/>
+      <feature id="com.example.mysql.rcp.feature" version="0.0.0"/>
+   </features>
+
+   <configurations>
+      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="4" />
+      <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.equinox.event" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.equinox.ds" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.e4.core.services" autoStart="true" startLevel="4" />
+      <plugin id="org.eclipse.e4.ui.services" autoStart="true" startLevel="4" />
+      <plugin id="org.apache.felix.scr" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.update.configurator" autoStart="true" startLevel="3" />
+   </configurations>
+
+</product>
