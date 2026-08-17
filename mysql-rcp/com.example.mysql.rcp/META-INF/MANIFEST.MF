@@ -12,5 +12,6 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.swt,
  org.eclipse.jface,
  com.mysql.cj,
- org.dom4j;bundle-version="2.2.0"
+ org.dom4j;bundle-version="2.2.0",
+ com.google.gson;bundle-version="2.14.0"
 Import-Package: org.osgi.framework

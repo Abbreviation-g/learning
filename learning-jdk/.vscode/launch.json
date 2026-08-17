@@ -3,6 +3,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "StringByteTest",
+            "request": "launch",
+            "mainClass": "learning_jdk.string.StringByteTest",
+            "projectName": "other-features"
+        },
+        {
+            "type": "java",
+            "name": "StableValueTest",
+            "request": "launch",
+            "mainClass": "learning_jdk.stable_value.StableValueTest",
+            "projectName": "learning-jdk25_preview"
+        },
+        {
+            "type": "java",
             "name": "HelloWorld",
             "request": "launch",
             "mainClass": "HelloWorld",
