@@ -25,6 +25,7 @@
    <features>
       <feature id="org.eclipse.rcp"/>
       <feature id="com.example.mysql.rcp.feature"/>
+      <feature id="org.eclipse.e4.rcp" installMode="root"/>
    </features>
 
    <configurations>
