@@ -2,7 +2,6 @@
 <?pde version="3.8"?>
 <target name="mysql-rcp" sequenceNumber="1">
     <locations>
-        <location path="C:\source\learning\mysql-rcp\target-platform\mysql" type="Directory"/>
         <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="false" type="InstallableUnit">
             <unit id="org.eclipse.rcp.feature.group" version="0.0.0"/>
             <unit id="org.eclipse.equinox.executable.feature.group" version="0.0.0"/>
@@ -13,7 +12,16 @@
 		    <unit id="org.eclipse.orbit.maven.org.dom4j.feature.group" version="4.40.0"/>
             <unit id="com.google.gson" version="0.0.0"/>
 	    </location>
-
+	    <location includeDependencyDepth="none" includeDependencyScopes="compile" includeSource="true" missingManifest="generate" type="Maven">
+		    <dependencies>
+			    <dependency>
+				    <groupId>com.mysql</groupId>
+				    <artifactId>mysql-connector-j</artifactId>
+				    <version>9.7.0</version>
+				    <type>jar</type>
+			    </dependency>
+		    </dependencies>
+	    </location>
     </locations>
     <environment>
         <os>win32</os>
